@@ -1,0 +1,210 @@
+// Firebase configuration and initialization
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Constants for Firestore collection names
+const PROGRESS_COLLECTION = "progress";
+const GOALS_COLLECTION = "goals";
+const USERS_COLLECTION = "users";
+
+// User sign-up
+async function signUp() {
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+
+    // Input validation
+    if (!email || !password) {
+        return alert("Email and password cannot be empty");
+    }
+
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        console.log("User signed up:", userCredential.user);
+    } catch (error) {
+        console.error("Error signing up:", error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+// User login
+async function login() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    // Input validation
+    if (!email || !password) {
+        return alert("Email and password cannot be empty");
+    }
+
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        console.log("User logged in:", userCredential.user);
+    } catch (error) {
+        console.error("Error logging in:", error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+// Timer and study session management
+let timer;
+let timeLeft;
+let isPaused = false;
+
+function startTimer() {
+    const studyDuration = parseInt(document.getElementById("study-duration").value) * 60;
+    const breakDuration = parseInt(document.getElementById("break-duration").value) * 60;
+    timeLeft = studyDuration;
+    updateTimerDisplay(timeLeft);
+    timer = setInterval(() => {
+        if (!isPaused) {
+            timeLeft--;
+            updateTimerDisplay(timeLeft);
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                alert("Time's up! Take a break or start another session.");
+                logProgress(studyDuration - timeLeft);
+            }
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    isPaused = true;
+}
+
+function resumeTimer() {
+    isPaused = false;
+}
+
+function endSession() {
+    clearInterval(timer);
+    logProgress(timeLeft);
+}
+
+function updateTimerDisplay(time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    document.getElementById("timer-display").textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+async function logProgress(duration) {
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            await db.collection(PROGRESS_COLLECTION).add({
+                uid: user.uid,
+                duration: duration,
+                timestamp: new Date()
+            });
+            console.log("Progress logged");
+            fetchProgress();
+        } catch (error) {
+            console.error("Error logging progress:", error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+}
+
+// Progress tracking
+async function fetchProgress() {
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            const querySnapshot = await db.collection(PROGRESS_COLLECTION).where("uid", "==", user.uid).get();
+            const progressList = document.getElementById("progress-list");
+            progressList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const progress = doc.data();
+                const li = document.createElement("li");
+                li.textContent = `Duration: ${progress.duration} seconds, Date: ${progress.timestamp.toDate().toLocaleString()}`;
+                progressList.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Error fetching progress:", error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+}
+
+// Goal setting
+async function setGoal() {
+    const user = auth.currentUser;
+    if (user) {
+        const goalDescription = document.getElementById("goal-description").value;
+        const goalDuration = parseInt(document.getElementById("goal-duration").value);
+
+        // Input validation
+        if (!goalDescription || isNaN(goalDuration)) {
+            return alert("Goal description and duration must be valid");
+        }
+
+        try {
+            await db.collection(GOALS_COLLECTION).add({
+                uid: user.uid,
+                description: goalDescription,
+                duration: goalDuration,
+                achieved: false
+            });
+            console.log("Goal set");
+            fetchGoals();
+        } catch (error) {
+            console.error("Error setting goal:", error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+}
+
+async function fetchGoals() {
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            const querySnapshot = await db.collection(GOALS_COLLECTION).where("uid", "==", user.uid).get();
+            const goalList = document.getElementById("goal-list");
+            goalList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const goal = doc.data();
+                const li = document.createElement("li");
+                li.textContent = `Goal: ${goal.description}, Duration: ${goal.duration} minutes, Achieved: ${goal.achieved}`;
+                goalList.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Error fetching goals:", error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+}
+
+function sendNotification(message) {
+    alert(message);
+}
+
+function notifySessionStart() {
+    sendNotification("Your study session has started!");
+}
+
+async function fetchUsers() {
+    try {
+        const querySnapshot = await db.collection(USERS_COLLECTION).get();
+        const userList = document.getElementById("user-list");
+        userList.innerHTML = "";
+        querySnapshot.forEach((doc) => {
+            const user = doc.data();
+            const li = document.createElement("li");
+            li.textContent = `User: ${user.email}`;
+            userList.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        alert(`Error: ${error.message}`);
+    }
+}

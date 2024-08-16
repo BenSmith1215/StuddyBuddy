@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sign-up Form -->
+        <div id="signup-form">
+            <h2>Sign Up</h2>
+            <input type="email" id="signup-email" placeholder="Email">
+            <input type="password" id="signup-password" placeholder="Password">
+            <button onclick="signUp()">Sign Up</button>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        
+        <!-- Timer Configuration -->
+        <div id="timer-config">
+            <h2>Timer Configuration</h2>
+            <label for="study-duration">Study Duration (minutes):</label>
+            <input type="number" id="study-duration" value="25">
+            <label for="break-duration">Break Duration (minutes):</label>
+            <input type="number" id="break-duration" value="5">
+            <button onclick="startTimer()">Start Timer</button>
+        </div>
+        
+        <!-- Study Session Management -->
+        <div id="study-session">
+            <h2>Study Session</h2>
+            <div id="timer-display">00:00</div>
+            <button onclick="pauseTimer()">Pause</button>
+            <button onclick="resumeTimer()">Resume</button>
+            <button onclick="endSession()">End Session</button>
+        </div>
+        
+        <!-- Progress Tracking -->
+        <div id="progress">
+            <h2>Progress</h2>
+            <ul id="progress-list"></ul>
+        </div>
+        
+        <!-- Goal Setting -->
+        <div id="goal-setting">
+            <h2>Set Your Goals</h2>
+            <input type="text" id="goal-description" placeholder="Goal Description">
+            <input type="number" id="goal-duration" placeholder="Goal Duration (minutes)">
+            <button onclick="setGoal()">Set Goal</button>
+            <h3>Your Goals</h3>
+            <ul id="goal-list"></ul>
+        </div>
+        
+        <!-- Admin User Management -->
+        <div id="admin-management">
+            <h2>User Management</h2>
+            <button onclick="fetchUsers()">Fetch All Users</button>
+            <ul id="user-list"></ul>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
